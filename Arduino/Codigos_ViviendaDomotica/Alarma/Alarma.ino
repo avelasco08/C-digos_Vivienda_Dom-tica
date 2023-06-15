@@ -1,7 +1,7 @@
 #include <Keypad.h>
 
-const byte NUM_FILAS = 4;
-const byte NUM_COLUMNAS = 4;
+const byte NUM_FILAS = 4;  // Número de filas de la matriz de teclas
+const byte NUM_COLUMNAS = 4;  // Número de columnas de la matriz de teclas
 
 char teclas[NUM_FILAS][NUM_COLUMNAS] = {
   {'1', '2', '3'},
@@ -10,104 +10,101 @@ char teclas[NUM_FILAS][NUM_COLUMNAS] = {
   {'*', '0', '#'}
 };
 
-byte filasPines[NUM_FILAS] = {23, 22, 21, 19};
-byte columnasPines[NUM_COLUMNAS] = {18, 17, 16, 15};
+byte filasPines[NUM_FILAS] = {23, 22, 21, 19};  // Pines conectados a las filas
+byte columnasPines[NUM_COLUMNAS] = {18, 17, 16, 15};  // Pines conectados a las columnas
 
 Keypad keypad = Keypad(makeKeymap(teclas), filasPines, columnasPines, NUM_FILAS, NUM_COLUMNAS);
 
-const byte PIR_PIN = 12;
-const byte LED_PIN = 13;
-const byte BUZZER_PIN = 4; // Cambia el número de pin según la conexión del zumbador
+const byte PIR_PIN = 12;  // Pin del sensor PIR
+const byte LED_PIN = 13;  // Pin del LED de la alarma
+const byte BUZZER_PIN = 4;  // Pin del zumbador (ajustar según la conexión)
 
-const unsigned long TIMEOUT = 15000; // tiempo límite en milisegundos
-const unsigned long INPUT_TIMEOUT = 5000; // tiempo límite para introducir cada tecla en milisegundos
+const unsigned long TIMEOUT = 15000;  // Tiempo límite en milisegundos
+const unsigned long INPUT_TIMEOUT = 5000;  // Tiempo límite para introducir cada tecla en milisegundos
 
-bool validSequence = false;
-bool sequenceEntered = false; // Variable para controlar si se ha introducido correctamente la secuencia
-byte currentSequenceIndex = 0;
-unsigned long lastInputMillis = 0;
-unsigned long startMillis = 0;
-bool pirTriggered = false;
-
+bool validSequence = false;  // Indica si se ha ingresado una secuencia válida
+bool sequenceEntered = false;  // Variable para controlar si se ha introducido correctamente la secuencia
+byte currentSequenceIndex = 0;  // Índice de la posición actual en la secuencia ingresada
+unsigned long lastInputMillis = 0;  // Tiempo del último input ingresado
+unsigned long startMillis = 0;  // Tiempo de inicio de la detección de movimiento del PIR
+bool pirTriggered = false;  // Indica si el PIR ha detectado movimiento
 
 void setup() {
-  pinMode(PIR_PIN, INPUT);
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(PIR_PIN, INPUT);  // Configurar el pin del PIR como entrada
+  pinMode(LED_PIN, OUTPUT);  // Configurar el pin del LED de la alarma como salida
+  pinMode(BUZZER_PIN, OUTPUT);  // Configurar el pin del zumbador como salida
 }
 
 void loop() {
   if (!pirTriggered) {
     while (digitalRead(PIR_PIN) == LOW) {
-      delay(100);
+      delay(100);  // Esperar hasta que se detecte movimiento en el PIR
     }
     pirTriggered = true;
-    startMillis = millis();
+    startMillis = millis();  // Registrar el tiempo de inicio de la detección de movimiento
   }
  
-  char key = keypad.getKey();
+  char key = keypad.getKey();  // Leer la tecla presionada en el teclado
   if (key) {
     if (key == '2') {
       if (currentSequenceIndex == 0 || (currentSequenceIndex == 3 && millis() - lastInputMillis <= INPUT_TIMEOUT)) {
-        currentSequenceIndex = 1;       // Avanzamos en la secuencia si se presiona '2' en los momentos adecuados
-        lastInputMillis = millis();     // Actualizamos el tiempo del último input ingresado
+        currentSequenceIndex = 1;  // Avanzar en la secuencia si se presiona '2' en los momentos adecuados
+        lastInputMillis = millis();  // Actualizar el tiempo del último input ingresado
       } else {
-        resetSequence();                // Reiniciamos la secuencia si se presiona '2' en un momento incorrecto
+        resetSequence();  // Reiniciar la secuencia si se presiona '2' en un momento incorrecto
       }
     } else if (key == '7') {
       if (currentSequenceIndex == 1 && millis() - lastInputMillis <= INPUT_TIMEOUT) {
-        currentSequenceIndex = 2;       // Avanzamos en la secuencia si se presiona '4' en los momentos adecuados
-        lastInputMillis = millis();     // Actualizamos el tiempo del último input ingresado
+        currentSequenceIndex = 2;  // Avanzar en la secuencia si se presiona '7' en los momentos adecuados
+        lastInputMillis = millis();  // Actualizar el tiempo del último input ingresado
       } else {
-        resetSequence();                // Reiniciamos la secuencia si se presiona '4' en un momento incorrecto
+        resetSequence();  // Reiniciar la secuencia si se presiona '7' en un momento incorrecto
       }
     } else if (key == '6') {
       if (currentSequenceIndex == 2 && millis() - lastInputMillis <= INPUT_TIMEOUT) {
-        currentSequenceIndex = 3;       // Avanzamos en la secuencia si se presiona '6' en los momentos adecuados
-        lastInputMillis = millis();     // Actualizamos el tiempo del último input ingresado
+        currentSequenceIndex = 3;  // Avanzar en la secuencia si se presiona '6' en los momentos adecuados
+        lastInputMillis = millis();  // Actualizar el tiempo del último input ingresado
       } else {
-        resetSequence();                // Reiniciamos la secuencia si se presiona '6' en un momento incorrecto
+        resetSequence();  // Reiniciar la secuencia si se presiona '6' en un momento incorrecto
       }
     } else if (key == '8') {
       if (currentSequenceIndex == 3 && millis() - lastInputMillis <= INPUT_TIMEOUT) {
-        validSequence = true;           // Marcamos la secuencia como válida si se presiona '8' en los momentos adecuados
-        lastInputMillis = millis();     // Actualizamos el tiempo del último input ingresado
+        validSequence = true;  // Marcar la secuencia como válida si se presiona '8' en los momentos adecuados
+        lastInputMillis = millis();  // Actualizar el tiempo del último input ingresado
       } else {
-        resetSequence();                // Reiniciamos la secuencia si se presiona '8' en un momento incorrecto
+        resetSequence();  // Reiniciar la secuencia si se presiona '8' en un momento incorrecto
       }
     } else {
-      resetSequence();                  // Reiniciamos la secuencia si se presiona una tecla diferente
+      resetSequence();  // Reiniciar la secuencia si se presiona una tecla diferente
     }
   }
 
   if (validSequence) {
-    digitalWrite(LED_PIN, HIGH); // Encendemos el LED de la alarma
-    sequenceEntered = true; // Se ha introducido correctamente la secuencia
-    // Aquí puedes agregar el código adicional que deseas ejecutar cuando se cumple la secuencia válida.
-    // Por ejemplo, enviar un mensaje a la web
+    digitalWrite(LED_PIN, HIGH);  // Encender el LED de la alarma
+    sequenceEntered = true;  // Se ha introducido correctamente la secuencia
+    
   } else {
-    digitalWrite(LED_PIN, LOW);  // Apagamos el LED de la alarma
+    digitalWrite(LED_PIN, LOW);  // Apagar el LED de la alarma
     if (!sequenceEntered && millis() - startMillis >= TIMEOUT && pirTriggered) {
       // Tiempo límite excedido y la secuencia no se ha introducido correctamente, activamos el zumbador
       digitalWrite(BUZZER_PIN, HIGH);
-       delay(500);
-       digitalWrite(BUZZER_PIN, LOW);
-         delay(1000);
-         digitalWrite(BUZZER_PIN, HIGH);
-       delay(500);
-       digitalWrite(BUZZER_PIN, LOW);
-         delay(1000);
-      // Puedes agregar más tonos o ajustar la duración según tus necesidades
+      delay(500);
+      digitalWrite(BUZZER_PIN, LOW);
+      delay(1000);
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(500);
+      digitalWrite(BUZZER_PIN, LOW);
+      delay(1000);
+     
     }
-    // Aquí puedes agregar el código adicional que deseas ejecutar cuando NO se cumple la secuencia válida.
-    // Por ejemplo, enviar un mensaje a la web
+   
   }
 }
 
 void resetSequence() {
-  currentSequenceIndex = 0;
-  validSequence = false;
-  sequenceEntered = false;
-  lastInputMillis = 0;
-  pirTriggered = false;
+  currentSequenceIndex = 0;  // Reiniciar el índice de la secuencia
+  validSequence = false;  // Marcar la secuencia como no válida
+  sequenceEntered = false;  // Marcar la secuencia como no introducida correctamente
+  lastInputMillis = 0;  // Reiniciar el tiempo del último input ingresado
+  pirTriggered = false;  // Marcar el PIR como no detectado
 }
