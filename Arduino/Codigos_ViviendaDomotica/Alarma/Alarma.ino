@@ -17,7 +17,7 @@ Keypad keypad = Keypad(makeKeymap(teclas), filasPines, columnasPines, NUM_FILAS,
 
 const byte PIR_PIN = 12;  // Pin del sensor PIR
 const byte LED_PIN = 13;  // Pin del LED de la alarma
-const byte BUZZER_PIN = 4;  // Pin del zumbador (ajustar según la conexión)
+const byte BUZZER_PIN = 14;  // Pin del zumbador (ajustar según la conexión)
 
 const unsigned long TIMEOUT = 15000;  // Tiempo límite en milisegundos
 const unsigned long INPUT_TIMEOUT = 5000;  // Tiempo límite para introducir cada tecla en milisegundos
@@ -33,9 +33,16 @@ void setup() {
   pinMode(PIR_PIN, INPUT);  // Configurar el pin del PIR como entrada
   pinMode(LED_PIN, OUTPUT);  // Configurar el pin del LED de la alarma como salida
   pinMode(BUZZER_PIN, OUTPUT);  // Configurar el pin del zumbador como salida
+  Serial.begin(115200);
 }
 
 void loop() {
+  if (digitalRead(PIR_PIN) == HIGH) {
+    Serial.println("Se a detectado movimiento");
+
+  } else {
+     Serial.println("No se a detectado movimiento");
+  }
   if (!pirTriggered) {
     while (digitalRead(PIR_PIN) == LOW) {
       delay(100);  // Esperar hasta que se detecte movimiento en el PIR
@@ -51,37 +58,39 @@ void loop() {
         currentSequenceIndex = 1;  // Avanzar en la secuencia si se presiona '2' en los momentos adecuados
         lastInputMillis = millis();  // Actualizar el tiempo del último input ingresado
       } else {
-        resetSequence();  // Reiniciar la secuencia si se presiona '2' en un momento incorrecto
+        resetSequence(true);  // Reiniciar la secuencia si se presiona '2' en un momento incorrecto
       }
     } else if (key == '7') {
       if (currentSequenceIndex == 1 && millis() - lastInputMillis <= INPUT_TIMEOUT) {
         currentSequenceIndex = 2;  // Avanzar en la secuencia si se presiona '7' en los momentos adecuados
         lastInputMillis = millis();  // Actualizar el tiempo del último input ingresado
       } else {
-        resetSequence();  // Reiniciar la secuencia si se presiona '7' en un momento incorrecto
+        resetSequence(true);  // Reiniciar la secuencia si se presiona '7' en un momento incorrecto
       }
     } else if (key == '6') {
       if (currentSequenceIndex == 2 && millis() - lastInputMillis <= INPUT_TIMEOUT) {
         currentSequenceIndex = 3;  // Avanzar en la secuencia si se presiona '6' en los momentos adecuados
         lastInputMillis = millis();  // Actualizar el tiempo del último input ingresado
       } else {
-        resetSequence();  // Reiniciar la secuencia si se presiona '6' en un momento incorrecto
+        resetSequence(true);  // Reiniciar la secuencia si se presiona '6' en un momento incorrecto
       }
     } else if (key == '8') {
       if (currentSequenceIndex == 3 && millis() - lastInputMillis <= INPUT_TIMEOUT) {
         validSequence = true;  // Marcar la secuencia como válida si se presiona '8' en los momentos adecuados
         lastInputMillis = millis();  // Actualizar el tiempo del último input ingresado
       } else {
-        resetSequence();  // Reiniciar la secuencia si se presiona '8' en un momento incorrecto
+        resetSequence(true);  // Reiniciar la secuencia si se presiona '8' en un momento incorrecto
       }
     } else {
-      resetSequence();  // Reiniciar la secuencia si se presiona una tecla diferente
+      resetSequence(true);  // Reiniciar la secuencia si se presiona una tecla diferente
     }
   }
 
   if (validSequence) {
     digitalWrite(LED_PIN, HIGH);  // Encender el LED de la alarma
     sequenceEntered = true;  // Se ha introducido correctamente la secuencia
+    delay(30000);
+    resetSequence(false);
     
   } else {
     digitalWrite(LED_PIN, LOW);  // Apagar el LED de la alarma
@@ -90,21 +99,35 @@ void loop() {
       digitalWrite(BUZZER_PIN, HIGH);
       delay(500);
       digitalWrite(BUZZER_PIN, LOW);
-      delay(1000);
+      delay(500);
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(500);
+      digitalWrite(BUZZER_PIN, LOW);
+      delay(500);
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(500);
+      digitalWrite(BUZZER_PIN, LOW);
+      delay(500);
       digitalWrite(BUZZER_PIN, HIGH);
       delay(500);
       digitalWrite(BUZZER_PIN, LOW);
       delay(1000);
+      resetSequence(false);
      
     }
    
   }
 }
-
-void resetSequence() {
+void resetSequence(bool action1) {
+  if (action1) {
   currentSequenceIndex = 0;  // Reiniciar el índice de la secuencia
   validSequence = false;  // Marcar la secuencia como no válida
   sequenceEntered = false;  // Marcar la secuencia como no introducida correctamente
-  lastInputMillis = 0;  // Reiniciar el tiempo del último input ingresado
-  pirTriggered = false;  // Marcar el PIR como no detectado
+  } else {
+    pirTriggered = false;  // Marcar el PIR como no detectado
+    digitalWrite(PIR_PIN, LOW);
+    digitalWrite(BUZZER_PIN, LOW);
+  }
 }
+
+
